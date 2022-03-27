@@ -1,0 +1,11 @@
+AddDefaultCharset utf-8
+Options -Indexes
+
+RewriteEngine On
+RewriteBase /catalog/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule .* index.php
+
+#RewriteRule ^product/([a-z0-9-]+)/?$  product.php?product=$1
+#RewriteRule ^category/(\d+)/? index.php?category=$1 [QSA]

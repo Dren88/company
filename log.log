@@ -1,0 +1,70 @@
+<pre>Array
+(
+    [new_password] => aadadwaw
+    [hash] => 18e60f4aeca5d2df403cb0624613eb4b
+    [change_pass] => Изменить пароль
+)
+</pre>
+
+
+-------------------------------------
+
+
+
+use Bitrix\Sale;
+/*
+ * получаем массив id пользователей без заполненного поля телефон
+ */
+$arUsersWithoutPhone = array();
+$data = CUser::GetList(($by="ID"),
+                        ($order="ASC"),
+                        array('ACTIVE' => 'Y' )
+                        );
+
+while($arUser = $data->Fetch()) {
+    if(!$arUser['PERSONAL_PHONE']){
+        $arUsersWithoutPhone[] = $arUser['ID'];
+    }
+}
+/*
+ * получаем id заказа пользователя
+ */
+$count = 0;
+foreach ($arUsersWithoutPhone as $userId) {
+    if ($count > 500){
+        break;
+    }
+    if (CModule::IncludeModule("sale")):
+        $arFilter = Array("USER_ID" => $userId);
+        $rsSales = CSaleOrder::GetList(array("DATE_INSERT" => "ASC"), $arFilter);
+        while ($arSales = $rsSales->Fetch()) {
+            $orderId = $arSales['ID'];
+        }
+    endif;
+    /*
+     * получаем телефон из заказа
+     */
+    if ($orderId) {
+        $order = Sale\Order::load($orderId);
+        $propertyCollection = $order->getPropertyCollection();
+
+        $ar = $propertyCollection->getArray();
+        $orderPhone = '';
+        foreach ($ar['properties'] as $property) {
+            if ($property['CODE'] == 'PHONE') $orderPhone = $property['VALUE'][0];
+        }
+        /*
+         * обновляем телефон пользователя если нашли в заказе
+         */
+        if ($orderPhone) {
+            echo '<pre>';
+            print_r($arUsersWithoutPhone);
+//            var_dump($orderPhone);
+            echo '<br>';
+//        $user = new CUser;
+//        $fields = Array("PERSONAL_PHONE" => $orderPhone);
+//        $user->Update($userId, $fields);
+        }
+        $count++;
+    }
+}
